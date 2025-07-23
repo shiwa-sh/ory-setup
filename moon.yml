@@ -1,0 +1,44 @@
+$schema: 'https://moonrepo.dev/schemas/project.json'
+
+# Project configuration
+project:
+  name: 'kratos'
+  description: 'Self-hosted Ory Kratos with Docker'
+  channel: 'stable'
+
+# File groups for organization
+fileGroups:
+  configs:
+    - 'config/**/*'
+    - 'Dockerfile'
+    - 'docker-compose.yml'
+    - '.env*'
+  
+  sources:
+    - 'config/**/*.{yml,yaml,json,jsonnet}'
+
+# Tasks definition
+tasks:
+  # Build Docker image
+  env:
+    REGISTRY: ${REGISTRY}
+  build:
+    command: 'docker build -t ghcr.io/${REGISTRY}/kratos:latest .'
+
+  push:
+    command: 'docker push ghcr.io/${REGISTRY}/kratos:latest'
+    deps:
+      - 'build'
+    env:
+      REGISTRY: '${REGISTRY}'
+      IMAGE_TAG: '${IMAGE_TAG}'
+    options:
+      runInCI: true
+
+  
+
+# Global configuration
+workspace:
+  syncing:
+    - 'docker-compose.yml'
+    - '.env*'

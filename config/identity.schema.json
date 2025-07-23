@@ -1,0 +1,57 @@
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/custom/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "minLength": 3,
+          "maxLength": 254,
+          "pattern": "^[^@]+@[^@]+\\.[^@]+$",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            },
+            "verification": {
+              "via": "email"
+            },
+            "recovery": {
+              "via": "email"
+            }
+          }
+        },
+        "name": {
+          "type": "object",
+          "properties": {
+            "first": {
+              "title": "First Name",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "pattern": "^[a-zA-Z-' ]+$"
+            },
+            "last": {
+              "title": "Last Name",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "pattern": "^[a-zA-Z-' ]+$"
+            }
+          },
+          "required": ["first", "last"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["email", "name"],
+      "additionalProperties": false
+    }
+  }
+}

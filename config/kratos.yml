@@ -1,0 +1,147 @@
+version: v0.13.0
+
+dsn: postgres://kratos:secret@postgres:5432/kratos?sslmode=disable
+
+serve:
+  public:
+    base_url: http://127.0.0.1:4433/
+    cors:
+      enabled: true
+      allowed_origins:
+        # Added for local development
+        - http://127.0.0.1:4455
+        - http://localhost:4455
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+      allowed_headers:
+        - Authorization
+        - Cookie
+        - Content-Type
+      exposed_headers:
+        - Content-Type
+        - Set-Cookie
+  admin:
+    base_url: http://127.0.0.1:4434/
+
+selfservice:
+  default_browser_return_url: http://127.0.0.1:4455/welcome
+  allowed_return_urls:
+    - http://127.0.0.1:4455
+    - http://localhost:19006/Callback
+    - exp://localhost:8081/--/Callback
+    # Added common return URLs
+    - http://127.0.0.1:4455/welcome
+    - http://127.0.0.1:4455/dashboard
+
+  methods:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: google
+            provider: google
+            client_id: will-be-set-via-env
+            client_secret: will-be-set-via-env
+            scope: 
+              - openid
+              - email
+              - profile
+            mapper_url: file:///etc/config/kratos/oidc.google.jsonnet
+
+  flows:
+    error:
+      ui_url: http://127.0.0.1:4455/error
+
+    settings:
+      ui_url: http://127.0.0.1:4455/settings
+      privileged_session_max_age: 15m
+      required_aal: highest_available
+
+    recovery:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/recovery
+      use: code
+
+    verification:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/verification
+      use: code
+      lifespan: 1h
+      notify_unknown_recipients: false
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/dashboard
+
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/login
+
+    login:
+      # Fixed: Remove duplicate https://http://
+      ui_url: http://127.0.0.1:4455/login
+      lifespan: 10m
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/dashboard
+        hooks:
+          - hook: require_verified_address
+
+    registration:
+      lifespan: 10m
+      ui_url: http://127.0.0.1:4455/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+            - hook: show_verification_ui
+        oidc:
+          hooks:
+            - hook: session
+
+session:
+  lifespan: 8760h  # 1 year - consider shortening for security
+  cookie:
+    # domain: 127.0.0.1
+    # Added recommended cookie settings
+    same_site: Lax
+    # secure: false  # Set to true in production with HTTPS
+
+log:
+  level: debug
+  format: text
+  leak_sensitive_values: false
+
+secrets:
+  cookie:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+  cipher:
+    - 32-LONG-SECRET-NOT-SECURE-AT-ALL
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 12
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: file:///etc/config/kratos/identity.schema.json
+
+courier:
+  smtp:
+    # Will be overridden by environment variable
+    connection_uri: smtps://username:password@smtp.gmail.com:465/?skip_ssl_verify=false
+    from_address: noreply@mehradhealth.com  # Fixed: Use your actual domain
+    from_name: "Mehrad Health"  # Fixed: Use your actual app name
+
+feature_flags:
+  cacheable_sessions: true
+  use_continue_with_transitions: true
