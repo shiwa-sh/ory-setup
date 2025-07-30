@@ -42,3 +42,4 @@ workspace:
   syncing:
     - 'docker-compose.yml'
     - '.env*'
+    
